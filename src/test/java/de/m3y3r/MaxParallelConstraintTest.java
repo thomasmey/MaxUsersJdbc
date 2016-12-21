@@ -40,27 +40,31 @@ public class MaxParallelConstraintTest {
 		final Random r = new Random();
 		Runnable code = () -> {
 			try(Connection con = ds.getConnection()) {
-				int id = r.nextInt();
+//				System.out.println("isoSup="+ con.getMetaData().supportsTransactionIsolationLevel(Connection.TRANSACTION_READ_UNCOMMITTED));
+
+				con.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
 				con.setAutoCommit(false);
-//				con.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
 
 				PreparedStatement psIns = con.prepareStatement("insert into users (id, name) values (?, ?)");
 				PreparedStatement psCheck = con.prepareStatement("select count(*) from users");
 
+				int id = r.nextInt();
 				psIns.setInt(1, id);
 				psIns.setString(2, "name-of-user-" + id);
-				psIns.execute();
+				int cnt = psIns.executeUpdate();
+				System.out.println("INS " + System.nanoTime() + '-' + Thread.currentThread() + " cnt=" + cnt);
 
 				ResultSet rs = psCheck.executeQuery();
 				if(rs.next()) {
 					int noUsers = rs.getInt(1);
-					System.out.println("thread=" + Thread.currentThread() + " noUsers="+noUsers);
+					System.out.println("CHK " + System.nanoTime() + '-' + Thread.currentThread() + " noUsers="+noUsers);
 					if(noUsers > maxNoUsers) {
 						System.out.println("max users reached rollback");
 						con.rollback();
 						return;
 					}
 				}
+				rs.close();
 				con.commit();
 			} catch (SQLException e) {
 				e.printStackTrace();
