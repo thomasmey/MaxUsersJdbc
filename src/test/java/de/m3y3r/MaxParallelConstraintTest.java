@@ -24,17 +24,28 @@ public class MaxParallelConstraintTest {
 	@Before
 	public void setup() throws SQLException {
 		BasicDataSource ds = new BasicDataSource();
-		ds.setDriver(new org.h2.Driver());
-		ds.setUrl("jdbc:h2:mem:db1");
-//		ds.setUrl("jdbc:h2:file:~/db1");
+
+		// HSQLDB, test okay
+		ds.setDriver(new org.hsqldb.jdbcDriver());
+		ds.setUrl("jdbc:hsqldb:mem:db1");
+
+		// H2, test fail
+//		ds.setDriver(new org.h2.Driver());
+//		ds.setUrl("jdbc:h2:mem:db1");
+
+		// Derby, tests okay
+//		ds.setDriver(new org.apache.derby.jdbc.EmbeddedDriver());
+//		ds.setUrl("jdbc:derby:memory:myDB;create=true");
+
 //		ds.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
 //		ds.setDefaultAutoCommit(false);
 //		ds.setMinIdle(10);
+
 		try(Connection c = ds.getConnection()) {
 			c.createStatement().execute("create table users (id integer not null primary key, name varchar(32) )");
 //			c.createStatement().execute("insert into users (id, name) values (1, 'tom')");
-			c.createStatement().execute("truncate table users");
-			c.commit();
+//			c.createStatement().execute("truncate table users");
+//			c.commit();
 		}
 		this.ds = ds;
 	}
